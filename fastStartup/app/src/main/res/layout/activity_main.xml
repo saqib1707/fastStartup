@@ -9,20 +9,13 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.saqib1707.faststartup.MainActivity">
 
-    <Button
+    <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Scan"
-        android:id="@+id/button.scan"
+        android:id="@+id/listView"
+        android:background="@android:color/holo_orange_light"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/textView"
-        android:layout_below="@+id/button.scan"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="69dp"
-        android:background="@android:color/holo_green_light" />
 </RelativeLayout>

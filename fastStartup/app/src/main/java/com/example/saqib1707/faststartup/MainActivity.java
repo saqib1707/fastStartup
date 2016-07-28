@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,13 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity {
-    String networkSSID = "test";
-    String networkPass = "pass";
-    Button buttonscan,buttonConnect;
-    //ArrayList<String> list;
-    //ArrayAdapter<String> arrayAdapter;
+    String networkSSID ;
+    String networkPass ;
     ListView lv;
-    TextView txt;
     WifiManager wifi;
     WifiScanReceiver wifiReceiver;
     /**
@@ -48,28 +45,42 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        buttonscan=(Button)findViewById(R.id.button_scan);
-       // lv = (ListView) findViewById(R.id.listView);
-        txt=(TextView)findViewById(R.id.textView);
-        wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        lv = (ListView) findViewById(R.id.listView);
 
+        networkSSID = "test";
+        networkPass = "pass";
+
+        WifiConfiguration conf = new WifiConfiguration();
+        conf.SSID = "\"" + networkSSID + "\"";
+
+        //for WEP network do this
+        conf.wepKeys[0] = "\"" + networkPass + "\"";
+        conf.wepTxKeyIndex = 0;
+        conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+        conf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+        //for WEP network uncomment below line
+        //conf.preSharedKey = "\""+ networkPass +"\"";
+
+        wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         if (!wifi.isWifiEnabled()){
             wifi.setWifiEnabled(true);
             msg("Wifi turned on");
         }else{
             msg("Wifi is already turned on");
         }
+        wifi.addNetwork(conf);
+        msg("Network added");
+        List<WifiConfiguration> list = wifi.getConfiguredNetworks();
+        for( WifiConfiguration i : list ) {
+            if(i.SSID != null && i.SSID.equals("\"" + networkSSID + "\"")) {
+                wifi.disconnect();
+                wifi.enableNetwork(i.networkId, true);
+                wifi.reconnect();
+                break;
+            }
+        }
         wifiReceiver = new WifiScanReceiver();
         registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-        /*buttonscan.setOnClickListener(
-                new View.OnClickListener(){
-                    @Override
-                    public void onClick(View v){
-                        wifi.startScan();
-                        Toast.makeText(getApplicationContext(),"Scanning....",Toast.LENGTH_SHORT).show();
-                    }
-                }
-        );*/
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
@@ -79,17 +90,15 @@ public class MainActivity extends Activity {
         return super.onCreateOptionsMenu(menu);
     }
     @Override
-    public boolean onMenuItemSelected(int featureId,MenuItem item){
+    public boolean onMenuItemSelected(int featureId,MenuItem item) {
         wifi.startScan();
         msg("Scanning ...");
-        return super.onMenuItemSelected(featureId,item);
+        return super.onMenuItemSelected(featureId, item);
     }
-    @Override
     public void onPause() {
         unregisterReceiver(wifiReceiver);
         super.onPause();
     }
-    @Override
     public void onResume() {
         registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         super.onResume();
@@ -102,9 +111,9 @@ public class MainActivity extends Activity {
             for (int i = 0; i < wifiScanList.size(); i++) {
                 list.add((wifiScanList.get(i)).toString());
             }
-            txt.setText(list.toString());
-            //ArrayAdapter<String> adapter=new ArrayAdapter<String>(MainActivity.this,android.R.layout.simple_dropdown_item_1line,list);
-            //lv.setAdapter(adapter);
+            //txt.setText(list.toString());
+            ArrayAdapter<String> adapter=new ArrayAdapter<String>(MainActivity.this,android.R.layout.simple_dropdown_item_1line,list);
+            lv.setAdapter(adapter);
             //lv.setAdapter(new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1, wifis));
         }
     }
