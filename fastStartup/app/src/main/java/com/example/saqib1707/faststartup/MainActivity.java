@@ -1,120 +1,89 @@
 package com.example.saqib1707.faststartup;
 
+import java.util.List;
+
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
-import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public class MainActivity extends Activity {
-    String networkSSID ;
-    String networkPass ;
-    ListView lv;
-    WifiManager wifi;
-    WifiScanReceiver wifiReceiver;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
-    public void msg(String str){
-        Toast.makeText(getApplicationContext(),str,Toast.LENGTH_LONG).show();
-    }
+    TextView mainText;
+    WifiManager mainWifi;
+    WifiReceiver receiverWifi;
+    List<ScanResult> wifiList;
+    StringBuilder sb = new StringBuilder();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        lv = (ListView) findViewById(R.id.listView);
+        mainText = (TextView) findViewById(R.id.tv1);
+        mainWifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        if (mainWifi.isWifiEnabled() == false)
+        {
+            // If wifi disabled then enable it
+            Toast.makeText(getApplicationContext(), "wifi is disabled..making it enabled",
+                    Toast.LENGTH_LONG).show();
 
-        networkSSID = "test";
-        networkPass = "pass";
-
-        WifiConfiguration conf = new WifiConfiguration();
-        conf.SSID = "\"" + networkSSID + "\"";
-
-        //for WEP network do this
-        conf.wepKeys[0] = "\"" + networkPass + "\"";
-        conf.wepTxKeyIndex = 0;
-        conf.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-        conf.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-        //for WEP network uncomment below line
-        //conf.preSharedKey = "\""+ networkPass +"\"";
-
-        wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        if (!wifi.isWifiEnabled()){
-            wifi.setWifiEnabled(true);
-            msg("Wifi turned on");
-        }else{
-            msg("Wifi is already turned on");
+            mainWifi.setWifiEnabled(true);
         }
-        wifi.addNetwork(conf);
-        msg("Network added");
-        List<WifiConfiguration> list = wifi.getConfiguredNetworks();
-        for( WifiConfiguration i : list ) {
-            if(i.SSID != null && i.SSID.equals("\"" + networkSSID + "\"")) {
-                wifi.disconnect();
-                wifi.enableNetwork(i.networkId, true);
-                wifi.reconnect();
-                break;
-            }
-        }
-        wifiReceiver = new WifiScanReceiver();
-        registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
+        receiverWifi=new WifiReceiver();
+        registerReceiver(receiverWifi, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+        mainWifi.startScan();
+        mainText.setText("Starting Scan...");
     }
-    public boolean onCreateOptionsMenu(Menu menu){
-        menu.add(0,0,0,"Refresh");
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(0, 0, 0, "Refresh");
         return super.onCreateOptionsMenu(menu);
     }
-    @Override
-    public boolean onMenuItemSelected(int featureId,MenuItem item) {
-        wifi.startScan();
-        msg("Scanning ...");
+
+    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+        mainWifi.startScan();
+        mainText.setText("Starting Scan");
         return super.onMenuItemSelected(featureId, item);
     }
-    public void onPause() {
-        unregisterReceiver(wifiReceiver);
+
+    protected void onPause() {
+        unregisterReceiver(receiverWifi);
         super.onPause();
     }
-    public void onResume() {
-        registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+
+    protected void onResume() {
+        registerReceiver(receiverWifi, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         super.onResume();
     }
 
-    private class WifiScanReceiver extends BroadcastReceiver {
+    // Broadcast receiver class called its receive method
+    // when number of wifi connections changed
+
+    class WifiReceiver extends BroadcastReceiver {
+
+        // This method call when number of wifi connections changed
         public void onReceive(Context c, Intent intent) {
-            ArrayList list=new ArrayList();
-            List<ScanResult> wifiScanList = wifi.getScanResults();
-            for (int i = 0; i < wifiScanList.size(); i++) {
-                list.add((wifiScanList.get(i)).toString());
+
+            sb = new StringBuilder();
+            wifiList = mainWifi.getScanResults();
+            sb.append("\n        Number Of Wifi connections :"+wifiList.size()+"\n\n");
+
+            for(int i = 0; i < wifiList.size(); i++){
+
+                sb.append(new Integer(i+1).toString() + ". ");
+                sb.append((wifiList.get(i)).toString());
+                sb.append("\n\n");
             }
-            //txt.setText(list.toString());
-            ArrayAdapter<String> adapter=new ArrayAdapter<String>(MainActivity.this,android.R.layout.simple_dropdown_item_1line,list);
-            lv.setAdapter(adapter);
-            //lv.setAdapter(new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1, wifis));
+
+            mainText.setText(sb);
         }
+
     }
 }
