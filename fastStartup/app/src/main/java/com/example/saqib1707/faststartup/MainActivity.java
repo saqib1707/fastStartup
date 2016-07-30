@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.view.Menu;
@@ -20,23 +21,23 @@ public class MainActivity extends Activity {
     WifiManager mainWifi;
     WifiReceiver receiverWifi;
     List<ScanResult> wifiList;
-    StringBuilder sb = new StringBuilder();
+    //StringBuilder sb = new StringBuilder();
+    public static String TP_MAC = "9c:d6:43:d7:69:bc";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mainText = (TextView) findViewById(R.id.tv1);
+        mainText = (TextView) findViewById(R.id.textView);
         mainWifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        if (mainWifi.isWifiEnabled() == false)
-        {
+        if (mainWifi.isWifiEnabled() == false) {
             // If wifi disabled then enable it
             Toast.makeText(getApplicationContext(), "wifi is disabled..making it enabled",
                     Toast.LENGTH_LONG).show();
 
             mainWifi.setWifiEnabled(true);
         }
-        receiverWifi=new WifiReceiver();
+        receiverWifi = new WifiReceiver();
         registerReceiver(receiverWifi, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         mainWifi.startScan();
         mainText.setText("Starting Scan...");
@@ -70,20 +71,42 @@ public class MainActivity extends Activity {
 
         // This method call when number of wifi connections changed
         public void onReceive(Context c, Intent intent) {
-
-            sb = new StringBuilder();
             wifiList = mainWifi.getScanResults();
-            sb.append("\n        Number Of Wifi connections :"+wifiList.size()+"\n\n");
+            boolean inTl = false;
 
-            for(int i = 0; i < wifiList.size(); i++){
+            if (mainWifi.getConnectionInfo().getBSSID().equalsIgnoreCase("TP_MAC")) {
+                inTl = true;
+            } else {
+                for (int i = 0; i < wifiList.size(); i++) {
+                    ScanResult wifi = wifiList.get(i);
+                    if (wifi.BSSID.equalsIgnoreCase("TP_MAC")) {
+                        inTl = true;
 
-                sb.append(new Integer(i+1).toString() + ". ");
-                sb.append((wifiList.get(i)).toString());
-                sb.append("\n\n");
+                        WifiConfiguration conf = new WifiConfiguration();
+                        conf.SSID = "\"" + wifi.SSID + "\"";
+                        conf.preSharedKey = "\"67DAFF34\"";
+                        mainWifi.addNetwork(conf);
+
+                        List<WifiConfiguration> list = mainWifi.getConfiguredNetworks();
+                        for (WifiConfiguration w : list) {
+                            if (w.SSID != null && w.SSID.equals("\"" + wifi.SSID + "\"")) {
+                                mainWifi.disconnect();
+                                mainWifi.enableNetwork(w.networkId, true);
+                                mainWifi.reconnect();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if(inTl){
+                //mainText.setText("We're in TL!");
+                Toast.makeText(getApplicationContext(),"We are in Tl",Toast.LENGTH_LONG).show();
+            } else {
+                //mainText.setText("We're not in TL :(");
+                Toast.makeText(getApplicationContext(),"We are not in Tl",Toast.LENGTH_LONG).show();
             }
 
-            mainText.setText(sb);
         }
-
     }
 }
