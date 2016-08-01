@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
@@ -81,7 +82,6 @@ public class MainActivity extends Activity {
                     ScanResult wifi = wifiList.get(i);
                     if (wifi.BSSID.equalsIgnoreCase("TP_MAC")) {
                         inTl = true;
-
                         WifiConfiguration conf = new WifiConfiguration();
                         conf.SSID = "\"" + wifi.SSID + "\"";
                         conf.preSharedKey = "\"67DAFF34\"";
@@ -102,9 +102,13 @@ public class MainActivity extends Activity {
             if(inTl){
                 //mainText.setText("We're in TL!");
                 Toast.makeText(getApplicationContext(),"We are in Tl",Toast.LENGTH_LONG).show();
+                Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse("http://internet.iitb.ac.in"));
+                startActivity(browserIntent);
             } else {
                 //mainText.setText("We're not in TL :(");
                 Toast.makeText(getApplicationContext(),"We are not in Tl",Toast.LENGTH_LONG).show();
+                Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse("http://internet.iitb.ac.in"));
+                startActivity(browserIntent);
             }
 
         }
