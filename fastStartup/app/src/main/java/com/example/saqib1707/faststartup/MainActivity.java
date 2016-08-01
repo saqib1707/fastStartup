@@ -104,11 +104,17 @@ public class MainActivity extends Activity {
                 Toast.makeText(getApplicationContext(),"We are in Tl",Toast.LENGTH_LONG).show();
                 Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse("http://internet.iitb.ac.in"));
                 startActivity(browserIntent);
+                //finish();
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(1);
             } else {
                 //mainText.setText("We're not in TL :(");
                 Toast.makeText(getApplicationContext(),"We are not in Tl",Toast.LENGTH_LONG).show();
                 Intent browserIntent=new Intent(Intent.ACTION_VIEW, Uri.parse("http://internet.iitb.ac.in"));
                 startActivity(browserIntent);
+                //finish();
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(1);
             }
 
         }
